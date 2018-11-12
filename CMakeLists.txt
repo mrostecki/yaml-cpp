@@ -30,6 +30,7 @@ option(YAML_CPP_BUILD_CONTRIB "Enable contrib stuff in library" ON)
 # see http://www.cmake.org/cmake/help/cmake2.6docs.html#variable:BUILD_SHARED_LIBS
 #     http://www.cmake.org/cmake/help/cmake2.6docs.html#command:add_library
 option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
+option(BUILD_STATIC_LIBS "Build Static Libraries" ON)
 
 # Set minimum C++ to 2011 standards
 set(CMAKE_CXX_STANDARD 11)
@@ -311,6 +312,21 @@ export(
     FILE "${PROJECT_BINARY_DIR}/yaml-cpp-targets.cmake")
 export(PACKAGE yaml-cpp)
 set(EXPORT_TARGETS yaml-cpp CACHE INTERNAL "export targets")
+
+if(BUILD_STATIC_LIBS)
+  add_library(yaml-cpp-static STATIC ${library_sources})
+  if (NOT CMAKE_VERSION VERSION_LESS 2.8.12)
+      target_include_directories(yaml-cpp-static
+          PUBLIC $<BUILD_INTERFACE:${YAML_CPP_SOURCE_DIR}/include>
+                 $<INSTALL_INTERFACE:${INCLUDE_INSTALL_ROOT_DIR}>
+          PRIVATE $<BUILD_INTERFACE:${YAML_CPP_SOURCE_DIR}/src>)
+  endif()
+  set_target_properties(yaml-cpp-static PROPERTIES
+    COMPILE_FLAGS "${yaml_c_flags} ${yaml_cxx_flags}"
+    OUTPUT_NAME yaml-cpp
+  )
+  install(TARGETS yaml-cpp-static EXPORT xaml-cpp-targets ${_INSTALL_DESTINATIONS})
+endif()
 
 set(CONFIG_INCLUDE_DIRS "${YAML_CPP_SOURCE_DIR}/include")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp-config.cmake.in
